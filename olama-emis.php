@@ -1,15 +1,15 @@
 <?php
 /**
  * Plugin Name: OLAMA EMIS
- * Description: Year-specific Ministry school and student statistical records.
- * Version: 0.3.1
+ * Description: Ministry school, campus, staff and student statistical records.
+ * Version: 0.4.0
  * Author: OLAMA
  * Text Domain: olama-emis
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('OLAMA_EMIS_VERSION', '0.3.1');
+define('OLAMA_EMIS_VERSION', '0.4.0');
 define('OLAMA_EMIS_PATH', plugin_dir_path(__FILE__));
 define('OLAMA_EMIS_URL', plugin_dir_url(__FILE__));
 
@@ -22,11 +22,16 @@ require_once OLAMA_EMIS_PATH . 'includes/class-olama-emis-school-admin.php';
 require_once OLAMA_EMIS_PATH . 'includes/class-olama-emis-campus.php';
 require_once OLAMA_EMIS_PATH . 'includes/class-olama-emis-campus-admin.php';
 
+require_once OLAMA_EMIS_PATH . 'includes/class-olama-emis-staff.php';
+require_once OLAMA_EMIS_PATH . 'includes/class-olama-emis-staff-export.php';
+require_once OLAMA_EMIS_PATH . 'includes/class-olama-emis-staff-admin.php';
+
 function olama_emis_install() {
     if (!Olama_EMIS_Schema::migrate_table_names()) return false;
     Olama_EMIS_Students::install();
     Olama_EMIS_Schools::install();
     if (!Olama_EMIS_Campus::install()) return false;
+    if (!Olama_EMIS_Staff::install()) return false;
     update_option('olama_emis_schema_version', OLAMA_EMIS_VERSION, false);
     return true;
 }
@@ -42,6 +47,7 @@ add_action('plugins_loaded', static function () {
         new Olama_EMIS_Admin();
         new Olama_EMIS_School_Admin();
         new Olama_EMIS_Campus_Admin();
+        new Olama_EMIS_Staff_Admin();
     }
 }, 45);
 

@@ -22,10 +22,11 @@ jobs:
           persist-credentials: false
       - name: Check PHP syntax
         run: find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
-      - name: Check school validation and student imports
+      - name: Check module validation and imports
         run: |
           php tests/school-profile-test.php
           php tests/import-test.php
+          php tests/staff-validation-test.php
 
   deploy:
     needs: verify

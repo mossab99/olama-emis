@@ -3,15 +3,16 @@ if (!defined('ABSPATH')) exit;
 
 final class Olama_EMIS_Import {
     /** Import a UTF-8 CSV or a single-sheet XLSX with header keys from the template. */
-    public static function rows($path, $filename) {
+    public static function rows($path, $filename, $fields = null, $required = 'student_uid', $dates = array('birth_date')) {
         if (!is_readable($path) || filesize($path) > 5 * 1024 * 1024) return new WP_Error('emis_file', 'File must be readable and under 5 MB.');
         $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-        if ($ext === 'csv') return self::csv($path);
-        if ($ext === 'xlsx') return self::xlsx($path);
+        if ($fields === null) $fields = Olama_EMIS_Students::fields();
+        if ($ext === 'csv') return self::csv($path, $fields, $required, $dates);
+        if ($ext === 'xlsx') return self::xlsx($path, $fields, $required, $dates);
         return new WP_Error('emis_type', 'Upload a CSV or XLSX file.');
     }
 
-    private static function csv($path) {
+    private static function csv($path, $fields, $required, $dates) {
         $handle = fopen($path, 'rb');
         if (!$handle) return new WP_Error('emis_csv', 'Unable to read CSV.');
         $rows = array();
@@ -21,10 +22,10 @@ final class Olama_EMIS_Import {
             $rows[] = $line;
         }
         fclose($handle);
-        return self::associate($rows);
+        return self::associate($rows, $fields, $required, $dates);
     }
 
-    private static function xlsx($path) {
+    private static function xlsx($path, $fields, $required, $dates) {
         if (!class_exists('ZipArchive') || !function_exists('simplexml_load_string')) return new WP_Error('emis_xlsx_runtime', 'XLSX support needs ZipArchive and SimpleXML.');
         $zip = new ZipArchive();
         if ($zip->open($path) !== true) return new WP_Error('emis_xlsx', 'Unable to open XLSX.');
@@ -67,23 +68,24 @@ final class Olama_EMIS_Import {
                 $rows[] = array_replace(array_fill(0, $last + 1, ''), $cells);
             }
         }
-        return self::associate($rows);
+        return self::associate($rows, $fields, $required, $dates);
     }
 
-    private static function associate(array $rows) {
+    private static function associate(array $rows, $allowed, $required, $dates) {
         if (!$rows) return new WP_Error('emis_empty', 'Import file is empty.');
         $headers = array_map('trim', array_shift($rows));
-        $allowed = Olama_EMIS_Students::fields();
         $lookup = array_flip($allowed);
         $keys = array();
         foreach ($headers as $heading) $keys[] = isset($allowed[$heading]) ? $heading : (isset($lookup[$heading]) ? $lookup[$heading] : '');
-        if (!in_array('student_uid', $keys, true)) return new WP_Error('emis_header', 'student_uid column is required. Use the downloadable template.');
+        if (!in_array($required, $keys, true)) return new WP_Error('emis_header', $required . ' column is required. Use the downloadable template.');
+        $known = array_filter($keys);
+        if (count($known) !== count(array_unique($known))) return new WP_Error('emis_header', 'Duplicate mapped column headings.');
         $out = array();
         foreach ($rows as $line) {
             $entry = array();
             foreach ($keys as $i => $key) if ($key) $entry[$key] = isset($line[$i]) ? trim((string) $line[$i]) : '';
-            if (isset($entry['birth_date']) && is_numeric($entry['birth_date']) && (float) $entry['birth_date'] > 0 && (float) $entry['birth_date'] < 100000) {
-                $entry['birth_date'] = gmdate('Y-m-d', (int) round(((float) $entry['birth_date'] - 25569) * DAY_IN_SECONDS));
+            foreach ($dates as $date) if (isset($entry[$date]) && is_numeric($entry[$date]) && (float) $entry[$date] > 0 && (float) $entry[$date] < 100000) {
+                $entry[$date] = gmdate('Y-m-d', (int) round(((float) $entry[$date] - 25569) * DAY_IN_SECONDS));
             }
             if (implode('', $entry) !== '') $out[] = $entry;
         }

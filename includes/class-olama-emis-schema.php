@@ -5,7 +5,8 @@ if (!defined('ABSPATH')) exit;
 final class Olama_EMIS_Schema {
     public static function table_suffixes() {
         return array('students', 'schools', 'buildings', 'building_years', 'floors',
-            'floor_years', 'rooms', 'room_years', 'classrooms', 'facility_rooms');
+            'floor_years', 'rooms', 'room_years', 'classrooms', 'facility_rooms',
+            'staff', 'staff_assignments', 'staff_qualifications', 'staff_workloads');
     }
 
     public static function migrate_table_names() {

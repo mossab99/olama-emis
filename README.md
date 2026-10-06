@@ -1,6 +1,6 @@
 # OLAMA EMIS
 
-The standalone Ministry statistics plugin owns year-specific EMIS modules. Stages 1 (schools), 2 (buildings), 3 (classrooms), 4 (facilities), and 7 (students) have admin pages under **OLAMA EMIS**.
+The standalone Ministry statistics plugin owns year-specific EMIS modules. Stages 1 (schools), 2 (buildings), 3 (classrooms), 4 (facilities), 5 (staff), 6 (qualifications/workload), and 7 (students) have admin pages under **OLAMA EMIS**.
 
 ## Stages 2–4 campus records
 
@@ -39,8 +39,14 @@ The grid and PDF roster start with OLAMA Core enrollment, then overlay saved EMI
 
 ## Next template revision
 
-The 2025–2026 workbook visible in Excel has additional page 1/2 columns (address hierarchy, parent education, family size, income, religion and others) beyond the shortened stage 7 prompt. Do not map its `الرقم التعريفي للطالب` to a national number. When the latest form is provided, version the field registry, add those columns with their exact categories, and write an explicit mapping/compatibility migration. Stages 5 and 6 (staff and qualifications/workload) can use the same plugin shell and their own tables and permissions.
+The 2025–2026 workbook visible in Excel has additional page 1/2 columns (address hierarchy, parent education, family size, income, religion and others) beyond the shortened stage 7 prompt. Do not map its `الرقم التعريفي للطالب` to a national number. When the latest form is provided, version the field registry, add those columns with their exact categories, and write an explicit mapping/compatibility migration. Stages 5 and 6 are implemented in the same plugin shell with separate staff, assignment, qualification and workload tables.
 
 ## Table naming
 
 Every plugin table uses `$wpdb->prefix . 'olama_emis_' . $entity` (for example, `wp_olama_emis_staff`). Version 0.3.1 renames existing `emis_*` tables before schema installation, preserving their IDs, records and indexes. If an old and new table both exist, setup stops without overwriting either; resolve that conflict before retrying. New installs create only `olama_emis_*` tables.
+
+## Stages 5–6 staff and qualifications
+
+Open **بيانات الموظفين** for the searchable 25/50-row registry, personal record, annual school assignment, Excel/CSV preview import, export and identifier duplicate checks. Open **المؤهلات وتوزيع الحصص** to save multiple degrees, select the highest, and manage subject/grade/section periods for the selected school/year. Staff identities retain leading zeros; all links use internal IDs. Appointment categories remain editable pending the final Ministry choices.
+
+The four tables are `olama_emis_staff`, `olama_emis_staff_assignments`, `olama_emis_staff_qualifications`, and `olama_emis_staff_workloads`, each preceded by `$wpdb->prefix`. InnoDB transactions and revisions protect edits; archived assignments retain their history. Workload limits are configurable warnings, defaulting to 26, and totals reconcile to reported periods. Permissions match the existing Ministry view/configure capabilities. See [docs/staff-field-map.md](docs/staff-field-map.md) for all three staff worksheet pages, import semantics, extensions and verification. Run `php tests/staff-validation-test.php`; staff database/rendering/export cases are included in the isolated integration suite.

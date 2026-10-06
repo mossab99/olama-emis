@@ -114,6 +114,7 @@ try {
     expect(strpos($readonly_html,'olama-emis__add-room') === false,'Viewer cannot add rooms');
     success($service->save_building(array_merge($base,array('building_id'=>$building_id,'revision'=>6,'archived'=>1))),'Archive annual building');
     expect(is_wp_error($service->save_rooms(array_merge($context,array('revision'=>7)),array($new),'classroom')),'Archived building rejects room writes');
+    require __DIR__ . '/staff-integration-cases.php';
     $before = array();
     $renames = array();
     foreach (Olama_EMIS_Schema::table_suffixes() as $suffix) {

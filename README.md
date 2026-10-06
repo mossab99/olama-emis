@@ -1,6 +1,14 @@
 # OLAMA EMIS
 
-The standalone Ministry statistics plugin owns year-specific EMIS modules. Stage 1, **البيانات الأساسية للمدرسة**, and Stage 7, **البيانات الأساسية للطالب**, have admin pages under **OLAMA EMIS**.
+The standalone Ministry statistics plugin owns year-specific EMIS modules. Stages 1 (schools), 2 (buildings), 3 (classrooms), 4 (facilities), and 7 (students) have admin pages under **OLAMA EMIS**.
+
+## Stages 2–4 campus records
+
+Open **البيانات الأساسية للبناء** to add a building, save its annual profile, and add its floors. Open **بيانات الغرف الصفية** or **غرف غير صفية** to add/edit rooms in batches. A shared physical register prevents duplicate room numbers across both modules. Annual use and archival preserve the history when a classroom becomes a laboratory or a room stops being used.
+
+Fields, tables, summaries and transaction rules are documented in [docs/campus-field-map.md](docs/campus-field-map.md). Optional additions are marked in the form. All campus tables require InnoDB. School/lab/floor totals are compared to their manual profile values. Teacher capacity and sanitary units are counted separately from room totals.
+
+`php tests/campus-integration-test.php` exercises actual WordPress `wpdb`/`dbDelta` and MySQL, using `EMIS_TEST_WP_ROOT`, `EMIS_TEST_DB_HOST`, `EMIS_TEST_DB_USER`, `EMIS_TEST_DB_PASSWORD` and a disposable `EMIS_TEST_DB_NAME` beginning with `emis_test_`. It creates and drops only that test database. It covers repeatable schema installation, annual history, rollback, room uniqueness, stale edits, floor scope, archival, summary counts and admin/viewer rendering.
 
 ## Stage 1 school profile
 
@@ -31,4 +39,4 @@ The grid and PDF roster start with OLAMA Core enrollment, then overlay saved EMI
 
 ## Next template revision
 
-The 2025–2026 workbook visible in Excel has additional page 1/2 columns (address hierarchy, parent education, family size, income, religion and others) beyond the shortened stage 7 prompt. Do not map its `الرقم التعريفي للطالب` to a national number. When the latest form is provided, version the field registry, add those columns with their exact categories, and write an explicit mapping/compatibility migration. The other six modules can then use the same plugin shell and their own tables and permissions.
+The 2025–2026 workbook visible in Excel has additional page 1/2 columns (address hierarchy, parent education, family size, income, religion and others) beyond the shortened stage 7 prompt. Do not map its `الرقم التعريفي للطالب` to a national number. When the latest form is provided, version the field registry, add those columns with their exact categories, and write an explicit mapping/compatibility migration. Stages 5 and 6 (staff and qualifications/workload) can use the same plugin shell and their own tables and permissions.

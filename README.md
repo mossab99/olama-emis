@@ -1,6 +1,12 @@
 # OLAMA EMIS
 
-The standalone Ministry statistics plugin owns year-specific EMIS modules. Stage 7, **البيانات الأساسية للطالب**, is the first implemented module. Its admin page is **OLAMA EMIS → البيانات الأساسية للطالب**.
+The standalone Ministry statistics plugin owns year-specific EMIS modules. Stage 1, **البيانات الأساسية للمدرسة**, and Stage 7, **البيانات الأساسية للطالب**, have admin pages under **OLAMA EMIS**.
+
+## Stage 1 school profile
+
+The annual school profile is stored in `$wpdb->prefix . 'emis_schools'` (`wp_emis_schools` with the default prefix), keyed by Core `school_id` and academic year. It saves a draft with field values in `profile_json`, search columns for school name/number/national ID, audit users/timestamps, and a revision for concurrent edit detection. It does not change OLAMA Core or Oracle data. Staff need `olama_users_ministry_view` to read and `olama_users_ministry_configure` to save. Only schools present in Core enrollment can receive a profile.
+
+The field registry and workbook coordinates are in [docs/school-field-map.md](docs/school-field-map.md). The 2025/2026 sheet is provisional; latest Ministry choices and mandatory rules have not yet been supplied. The page saves drafts without claiming they are export ready. School number, school national ID, Core school ID, and Stage 2 building identifiers remain separate.
 
 ## Deployment
 

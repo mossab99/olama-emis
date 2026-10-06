@@ -48,7 +48,6 @@ final class Olama_EMIS_Students {
             KEY cohort (school_id,study_year,building_number,classroom_number),
             KEY national_lookup (national_id)
         ) {$charset};");
-        update_option('olama_emis_schema_version', OLAMA_EMIS_VERSION, false);
     }
 
     public static function fields() {

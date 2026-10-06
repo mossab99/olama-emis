@@ -1,0 +1,74 @@
+name: Deploy OLAMA EMIS to Contabo
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: olama-emis-production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check PHP syntax
+        run: find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy OLAMA EMIS via SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
+          script: |
+            set -eu
+
+            BASE_DIR=/home/olama/htdocs/olama.online/wp-content/plugins
+            PLUGIN_DIR="$BASE_DIR/olama-emis"
+            REPO_URL=https://github.com/mossab99/olama-emis.git
+
+            if [ ! -d "$BASE_DIR" ]; then
+              echo "WordPress plugins directory does not exist: $BASE_DIR" >&2
+              exit 1
+            fi
+
+            if [ -e "$PLUGIN_DIR" ]; then
+              if [ ! -d "$PLUGIN_DIR/.git" ]; then
+                echo "Existing olama-emis directory is not Git-managed; refusing to replace it." >&2
+                exit 1
+              fi
+              ORIGIN=$(git -c safe.directory="$PLUGIN_DIR" -C "$PLUGIN_DIR" remote get-url origin)
+              if [ "$ORIGIN" != "$REPO_URL" ]; then
+                echo "Existing olama-emis origin differs; refusing to replace it." >&2
+                exit 1
+              fi
+              if [ -n "$(git -c safe.directory="$PLUGIN_DIR" -C "$PLUGIN_DIR" status --porcelain)" ]; then
+                echo "Existing olama-emis checkout has local changes; refusing to overwrite them." >&2
+                exit 1
+              fi
+              git -c safe.directory="$PLUGIN_DIR" -C "$PLUGIN_DIR" fetch origin main
+              git -c safe.directory="$PLUGIN_DIR" -C "$PLUGIN_DIR" merge --ff-only FETCH_HEAD
+            else
+              STAGING=$(mktemp -d "$BASE_DIR/.olama-emis.XXXXXX")
+              git clone --branch main "$REPO_URL" "$STAGING"
+              mv "$STAGING" "$PLUGIN_DIR"
+            fi
+
+            chown -R www-data:www-data "$PLUGIN_DIR"
+            find "$PLUGIN_DIR" -type d -exec chmod 755 {} +
+            find "$PLUGIN_DIR" -type f -exec chmod 644 {} +
+            echo "OLAMA EMIS deployment completed: $(git -c safe.directory="$PLUGIN_DIR" -C "$PLUGIN_DIR" rev-parse --short HEAD)"

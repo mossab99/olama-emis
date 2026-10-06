@@ -4,12 +4,12 @@ Reference: `lsjl_lhsyy_lnzm_lmlwmt_ltrbwy_jyl_2025-2026_3.xlsx`, sheets `الب�
 
 ## Identity and annual records
 
-- `emis_buildings`: a stable internal ID linked to Core `school_id`, and a unique building number within that school. The building number is distinct from its national/commercial registry ID. Building numbers are immutable in this UI to protect previous records.
-- `emis_building_years`: one profile per building and academic year, national registry ID, annual archive status, revision, last editor and time. Its revision serializes concurrent building, floor and room edits.
-- `emis_floors`: one stable ID per building and signed floor number. Ground = 0, first = 1, first basement = -1. `emis_floor_years` stores its annual name and measured area.
-- `emis_rooms`: one physical room ID and immutable room number per building, unique across classroom/facility use and all floors. Room numbers may be text; the workbook's facility-room note describes a floor digit plus two room digits (e.g. 102). No pattern is enforced for basements until the Ministry confirms its convention.
-- `emis_room_years`: one annual floor, use (`classroom`/`facility`), common profile and archive status per physical room.
-- `emis_classrooms` and `emis_facility_rooms`: annual module-specific details linked to the common room/year record. Changing use preserves the source details, but only the selected annual use contributes to lists and totals.
+- `olama_emis_buildings`: a stable internal ID linked to Core `school_id`, and a unique building number within that school. The building number is distinct from its national/commercial registry ID. Building numbers are immutable in this UI to protect previous records.
+- `olama_emis_building_years`: one profile per building and academic year, national registry ID, annual archive status, revision, last editor and time. Its revision serializes concurrent building, floor and room edits.
+- `olama_emis_floors`: one stable ID per building and signed floor number. Ground = 0, first = 1, first basement = -1. `olama_emis_floor_years` stores its annual name and measured area.
+- `olama_emis_rooms`: one physical room ID and immutable room number per building, unique across classroom/facility use and all floors. Room numbers may be text; the workbook's facility-room note describes a floor digit plus two room digits (e.g. 102). No pattern is enforced for basements until the Ministry confirms its convention.
+- `olama_emis_room_years`: one annual floor, use (`classroom`/`facility`), common profile and archive status per physical room.
+- `olama_emis_classrooms` and `olama_emis_facility_rooms`: annual module-specific details linked to the common room/year record. Changing use preserves the source details, but only the selected annual use contributes to lists and totals.
 
 Application validation checks all relationships before writing. Physical identifiers are not linked by national-number text. No Core/Oracle records are updated. Existing assets can be registered in a new year; annual profiles and rooms are explicitly saved rather than copied automatically.
 

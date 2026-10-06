@@ -12,7 +12,7 @@ Fields, tables, summaries and transaction rules are documented in [docs/campus-f
 
 ## Stage 1 school profile
 
-The annual school profile is stored in `$wpdb->prefix . 'emis_schools'` (`wp_emis_schools` with the default prefix), keyed by Core `school_id` and academic year. It saves a draft with field values in `profile_json`, search columns for school name/number/national ID, audit users/timestamps, and a revision for concurrent edit detection. It does not change OLAMA Core or Oracle data. Staff need `olama_users_ministry_view` to read and `olama_users_ministry_configure` to save. Only schools present in Core enrollment can receive a profile.
+The annual school profile is stored in `$wpdb->prefix . 'olama_emis_schools'` (`wp_olama_emis_schools` with the default prefix), keyed by Core `school_id` and academic year. It saves a draft with field values in `profile_json`, search columns for school name/number/national ID, audit users/timestamps, and a revision for concurrent edit detection. It does not change OLAMA Core or Oracle data. Staff need `olama_users_ministry_view` to read and `olama_users_ministry_configure` to save. Only schools present in Core enrollment can receive a profile.
 
 The field registry and workbook coordinates are in [docs/school-field-map.md](docs/school-field-map.md). The 2025/2026 sheet is provisional; latest Ministry choices and mandatory rules have not yet been supplied. The page saves drafts without claiming they are export ready. School number, school national ID, Core school ID, and Stage 2 building identifiers remain separate.
 
@@ -22,7 +22,7 @@ The `main` branch workflow checks PHP syntax, then deploys this repository to `/
 
 ## Stage 7 data contract
 
-- The table is `$wpdb->prefix . 'emis_students'` (`wp_emis_students` on a default WordPress prefix). One row is keyed by `student_uid + study_year`.
+- The table is `$wpdb->prefix . 'olama_emis_students'` (`wp_olama_emis_students` on a default WordPress prefix). One row is keyed by `student_uid + study_year`.
 - `student_uid` must exist in OLAMA Core and have an enrollment in the selected school/year. Oracle sync continues to own the canonical student and enrollment records. EMIS saves no changes to those source tables.
 - National number and non-Jordanian passport/ID number are separate fields. Non-Jordanian document type permits only `جواز سفر` or `هوية`.
 - An EMIS national number cannot be assigned to a different student in either the EMIS table or OLAMA Core.
@@ -40,3 +40,7 @@ The grid and PDF roster start with OLAMA Core enrollment, then overlay saved EMI
 ## Next template revision
 
 The 2025–2026 workbook visible in Excel has additional page 1/2 columns (address hierarchy, parent education, family size, income, religion and others) beyond the shortened stage 7 prompt. Do not map its `الرقم التعريفي للطالب` to a national number. When the latest form is provided, version the field registry, add those columns with their exact categories, and write an explicit mapping/compatibility migration. Stages 5 and 6 (staff and qualifications/workload) can use the same plugin shell and their own tables and permissions.
+
+## Table naming
+
+Every plugin table uses `$wpdb->prefix . 'olama_emis_' . $entity` (for example, `wp_olama_emis_staff`). Version 0.3.1 renames existing `emis_*` tables before schema installation, preserving their IDs, records and indexes. If an old and new table both exist, setup stops without overwriting either; resolve that conflict before retrying. New installs create only `olama_emis_*` tables.

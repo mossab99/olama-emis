@@ -21,6 +21,8 @@ $table_prefix = 'test_';
 require ABSPATH . 'wp-settings.php';
 require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 dbDelta(wp_get_db_schema());
+require dirname(__DIR__) . '/includes/class-olama-emis-schema.php';
+require dirname(__DIR__) . '/includes/class-olama-emis-students.php';
 require dirname(__DIR__) . '/includes/class-olama-emis-schools.php';
 require dirname(__DIR__) . '/includes/class-olama-emis-campus.php';
 
@@ -28,6 +30,7 @@ function expect($condition,$message) { if (!$condition) throw new RuntimeExcepti
 function success($value,$message) { expect(!is_wp_error($value),$message . (is_wp_error($value) ? ': ' . $value->get_error_message() : '')); return $value; }
 
 try {
+    Olama_EMIS_Students::install();
     Olama_EMIS_Schools::install();
     expect(Olama_EMIS_Campus::install(),'Campus tables use InnoDB');
     expect(Olama_EMIS_Campus::install(),'Repeatable schema upgrade');
@@ -111,6 +114,24 @@ try {
     expect(strpos($readonly_html,'olama-emis__add-room') === false,'Viewer cannot add rooms');
     success($service->save_building(array_merge($base,array('building_id'=>$building_id,'revision'=>6,'archived'=>1))),'Archive annual building');
     expect(is_wp_error($service->save_rooms(array_merge($context,array('revision'=>7)),array($new),'classroom')),'Archived building rejects room writes');
+    $before = array();
+    $renames = array();
+    foreach (Olama_EMIS_Schema::table_suffixes() as $suffix) {
+        $table = $wpdb->prefix . 'olama_emis_' . $suffix;
+        $before[$suffix] = $wpdb->get_results("SELECT * FROM `{$table}` ORDER BY id", ARRAY_A);
+        $renames[] = "`{$table}` TO `{$wpdb->prefix}emis_{$suffix}`";
+    }
+    expect(false !== $wpdb->query('RENAME TABLE ' . implode(', ', $renames)), 'Simulate legacy table names');
+    $wpdb->query("CREATE TABLE {$wpdb->prefix}olama_emis_schools (id int)");
+    expect(!Olama_EMIS_Schema::migrate_table_names(), 'Conflicting tables stop migration');
+    expect($wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}emis_buildings'") !== null, 'Conflict leaves all legacy tables intact');
+    $wpdb->query("DROP TABLE {$wpdb->prefix}olama_emis_schools");
+    expect(Olama_EMIS_Schema::migrate_table_names(), 'Migrate legacy names');
+    expect(Olama_EMIS_Schema::migrate_table_names(), 'Repeat migration safely');
+    foreach ($before as $suffix => $rows) {
+        $table = $wpdb->prefix . 'olama_emis_' . $suffix;
+        expect($rows === $wpdb->get_results("SELECT * FROM `{$table}` ORDER BY id", ARRAY_A), 'Migration preserves records: ' . $suffix);
+    }
     echo "Campus MySQL integration passed: schema upgrades, identity, years, rollback, duplicate rooms, stale edits, floor scope, archival and unit summaries.\n";
 } finally {
     $connection->query("DROP DATABASE `{$db_name}`");

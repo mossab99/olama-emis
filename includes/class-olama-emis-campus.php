@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) exit;
 final class Olama_EMIS_Campus {
     public static function table($name) {
         global $wpdb;
-        return $wpdb->prefix . 'emis_' . $name;
+        return $wpdb->prefix . 'olama_emis_' . $name;
     }
 
     public static function install() {
